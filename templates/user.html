@@ -1,87 +1,121 @@
-{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load static %}
+    {% csrf_token %}
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer Dashboard</title>
     <link rel="stylesheet" href="{% static 'css/user.css' %}">
     <style>
+        /* Your existing styles */
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: #f9f9f9;
             margin: 0;
             padding: 0;
+            line-height: 1.6;
+            color: #333;
         }
-        
+
         header {
-            background-color: #4CAF50;
+            background-color: #00796b;
             color: white;
-            padding: 10px 0;
+            padding: 20px 0;
             text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
-        
+
         h1 {
             margin: 0;
+            font-size: 2rem;
         }
-        
-        .container {
-            width: 80%;
-            margin: auto;
-            overflow: hidden;
-        }
-        
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        
-        ul li {
-            background: white;
-            margin: 10px 0;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        ul li img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 10px 0;
-        }
-        
-        ul li .buy-button {
-            background-color: #4CAF50;
+
+        .cart-link {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background-color: #004d40;
             color: white;
             padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
+            border-radius: 20px;
+            font-size: 1rem;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .cart-link:hover {
+            background-color: #00251a;
+            transform: scale(1.05);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        ul li {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            text-align: center;
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        ul li:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        ul li img {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        ul li .buy-button, .add-to-cart-button {
+            display: inline-block;
+            background-color: #00796b;
+            color: white;
+            padding: 10px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.3s ease;
             cursor: pointer;
-            text-decoration: none;
-            font-size: 16px;
+            margin-top: 10px;
         }
-        
-        ul li .buy-button:hover {
-            background-color: #45a049;
-        }
-        
-        a {
-            color: #4CAF50;
-            text-decoration: none;
-        }
-        
-        a:hover {
-            text-decoration: underline;
+
+        ul li .buy-button:hover, .add-to-cart-button:hover {
+            background-color: #004d40;
+            transform: scale(1.05);
         }
     </style>
 </head>
 <body>
 <header>
     <h1>Customer Dashboard</h1>
+    <a href="{% url 'cart_view' %}" class="cart-link">View Cart</a>
 </header>
 <div class="container">
     <p>You can logout here <a href="{% url 'user_logout' %}">Logout</a></p>
@@ -93,10 +127,58 @@
                 <h3>{{ product.name }}</h3>
                 <p>{{ product.description }}</p>
                 <img src="{{ product.image.url }}" alt="{{ product.name }}">
-                <a href="#" class="buy-button">Buy</a>
+                <p>{{ product.price }}</p>
+                <button class="buy-button" onclick="buyProduct('{{ product.name }}')">Buy</button>
+                <button class="add-to-cart-button" onclick="addToCart('{{ product.id }}')">Add to Cart</button>
             </li>
         {% endfor %}
     </ul>
 </div>
+
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    function buyProduct(productName) {
+        alert(`You have successfully bought the product: ${productName}`);
+    }
+
+    function addToCart(productId) {
+        fetch(`/add_to_cart/${productId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+            body: JSON.stringify({ product_id: productId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert(data.message);  // Show success or "already in cart" message
+            } else {
+                alert('Error: Unable to add product to cart.');
+            }
+        })
+        .catch(error => {
+            console.error('Error adding product to cart:', error);  // Log the actual error
+            alert('Error adding product to cart.');
+        });
+    }
+</script>
 </body>
 </html>

@@ -2,3 +2,5 @@
 *.pyc
 /webapp/__pycache__
 /webapp/__pycache__
+/webapp/__pycache__
+*.pyc
